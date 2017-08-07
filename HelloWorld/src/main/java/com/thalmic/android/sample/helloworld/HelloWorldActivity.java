@@ -15,6 +15,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -47,20 +48,26 @@ public class HelloWorldActivity extends Activity {
     private Button record;
     boolean isRecord = false;
 
+    //取得データの種類選択用変数
+    private  CheckBox checkAccel, checkGyro, checkOrient, checkQuater;
+    boolean isAccel = false, isGyro = false, isOrient = false, isQuater = false;
+
     //記録用変数
     Calendar calendar = Calendar.getInstance();
-    String AccelData;
-    File dataFile = new File(Environment.getExternalStorageDirectory().getPath() + "/"
-            + calendar.get(Calendar.YEAR) + "-"
-            + (calendar.get(Calendar.MONTH) + 1) + "-"
-            + calendar.get(Calendar.DAY_OF_MONTH) + "-"
-            + calendar.get(Calendar.HOUR_OF_DAY) + "-"
-            + calendar.get(Calendar.MINUTE) + "-"
-            + calendar.get(Calendar.SECOND)
-            + ".csv");
-    FileOutputStream fileOutputStream = new FileOutputStream(dataFile, true);
-    OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream, "UTF-8");
-    BufferedWriter bw = new BufferedWriter(outputStreamWriter);;
+    String RecordTime = calendar.get(Calendar.YEAR) + "-"
+                      + (calendar.get(Calendar.MONTH) + 1) + "-"
+                      + calendar.get(Calendar.DAY_OF_MONTH) + "_"
+                      + calendar.get(Calendar.HOUR_OF_DAY) + ":"
+                      + calendar.get(Calendar.MINUTE) + ":"
+                      + calendar.get(Calendar.SECOND);
+    String AccelData, GyroData, OrientData, QuaterData;
+    File AccelDataFile = new File(Environment.getExternalStorageDirectory().getPath() + "/" + RecordTime + "_Accel.csv"),
+         GyroDataFile = new File(Environment.getExternalStorageDirectory().getPath() + "/" + RecordTime + "_Gyro.csv"),
+         OrientDataFile = new File(Environment.getExternalStorageDirectory().getPath() + "/" + RecordTime + "_Orient.csv"),
+         QuaterDataFile = new File(Environment.getExternalStorageDirectory().getPath() + "/" + RecordTime + "_Quater.csv");
+    FileOutputStream AccelFileOutputStream, GyroFileOutputStream, OrientFileOutputStream, QuaterFileOutputStream;
+    OutputStreamWriter AccelOutputStreamWriter, GyroOutputStreamWriter, OrientOutputStreamWriter, QuaterOutputStreamWriter;
+    BufferedWriter bwAccel, bwGyro, bwOrient, bwQuater;
 
     // Classes that inherit from AbstractDeviceListener can be used to receive events from Myo devices.
     // If you do not override an event, the default behavior is to do nothing.
@@ -125,17 +132,54 @@ public class HelloWorldActivity extends Activity {
                 roll *= -1;
                 pitch *= -1;
             }
+
+            //Orientationデータの書き込み
+            if (isRecord && isExternalStorageWritable() && isOrient) {
+                OrientData = timestamp + "," + roll + "," + pitch + "," + yaw + "\n";
+                try {
+                    bwOrient.write(OrientData);
+                    bwOrient.flush();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            //四元ベクトルデータの書き込み
+            if (isRecord && isExternalStorageWritable() && isQuater) {
+                QuaterData = timestamp + "," + rotation.x() + "," + rotation.y() + "," + rotation.z() + "," + rotation.w() + "\n";
+                try {
+                    bwQuater.write(QuaterData);
+                    bwQuater.flush();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
         // onAccelerometerData() is called when an attached Myo has provided new accelerometer data
         //単位は g (1G = 9.80665 m/s^2)
         @Override
         public void onAccelerometerData(Myo myo, long timestamp, Vector3 accel) {
-            if (isRecord && isExternalStorageWritable()) {
+            //加速度データの書き込み
+            if (isRecord && isExternalStorageWritable() && isAccel) {
                 AccelData = timestamp + "," + accel.x() + "," + accel.y() + "," + accel.z() + "\n";
                 try {
-                    bw.write(AccelData);
-                    bw.flush();
+                    bwAccel.write(AccelData);
+                    bwAccel.flush();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        // onGyroscopeData() is called when an attached Myo has provided new gyroscope data
+        @Override
+        public void onGyroscopeData(Myo myo, long timestamp, Vector3 gyro) {
+            //ジャイロデータの書き込み
+            if (isRecord && isExternalStorageWritable() && isGyro) {
+                GyroData = timestamp + "," + gyro.x() + "," + gyro.y() + "," + gyro.z() + "\n";
+                try {
+                    bwGyro.write(GyroData);
+                    bwGyro.flush();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -205,26 +249,73 @@ public class HelloWorldActivity extends Activity {
         mLockStateView = (TextView) findViewById(R.id.lock_state);
         mTextView = (TextView) findViewById(R.id.text);
 
+        checkAccel = (CheckBox) findViewById(R.id.checkAccel);
+        checkGyro = (CheckBox) findViewById(R.id.checkGyro);
+        checkOrient = (CheckBox) findViewById(R.id.checkOrientation);
+        checkQuater = (CheckBox) findViewById(R.id.checkQuaternion);
+
         record = (Button) findViewById(R.id.button);
+        //クリック時の処理
         record.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //記録状態変数の切り替え
                 if (isRecord) {
+                    //データ保存の終了
                     isRecord = false;
+                    record.setTextColor(Color.BLACK);
                     record.setText("Record Finish!");
+
+                    //チェックボックスの開放
+                    checkAccel.setClickable(true);
+                    checkGyro.setClickable(true);
+                    checkOrient.setClickable(true);
+                    checkQuater.setClickable(true);
+
                     try {
-                        bw.close();
+                        if (checkAccel.isChecked()) bwAccel.close();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
                 else {
+                    //データ保存の開始
                     isRecord = true;
+                    record.setTextColor(Color.RED);
                     record.setText("Data Recording...");
+
+                    //データ保存中にチェックボックスが変わらないようにする
+                    checkAccel.setClickable(false);
+                    checkGyro.setClickable(false);
+                    checkOrient.setClickable(false);
+                    checkQuater.setClickable(false);
+
                     makefile();
                     try {
-                        bw.write("TimeStamp,x,y,z\n");
+                        if (checkAccel.isChecked()) {
+                            AccelFileOutputStream = new FileOutputStream(AccelDataFile, true);
+                            AccelOutputStreamWriter = new OutputStreamWriter(AccelFileOutputStream, "UTF-8");
+                            bwAccel = new BufferedWriter(AccelOutputStreamWriter);
+                            bwAccel.write("TimeStamp,x,y,z\n");
+                        }
+                        if (checkGyro.isChecked()) {
+                            GyroFileOutputStream = new FileOutputStream(GyroDataFile, true);
+                            GyroOutputStreamWriter = new OutputStreamWriter(GyroFileOutputStream, "UTF-8");
+                            bwGyro = new BufferedWriter(GyroOutputStreamWriter);
+                            bwGyro.write("TimeStamp,x,y,z\n");
+                        }
+                        if (checkOrient.isChecked()) {
+                            OrientFileOutputStream = new FileOutputStream(OrientDataFile, true);
+                            OrientOutputStreamWriter = new OutputStreamWriter(OrientFileOutputStream, "UTF-8");
+                            bwOrient = new BufferedWriter(OrientOutputStreamWriter);
+                            bwOrient.write("TimeStamp,roll,pitch,yaw\n");
+                        }
+                        if (checkQuater.isChecked()) {
+                            QuaterFileOutputStream = new FileOutputStream(QuaterDataFile, true);
+                            QuaterOutputStreamWriter = new OutputStreamWriter(QuaterFileOutputStream, "UTF-8");
+                            bwQuater = new BufferedWriter(QuaterOutputStreamWriter);
+                            bwQuater.write("TimeStamp,x,y,z,w\n");
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -283,7 +374,10 @@ public class HelloWorldActivity extends Activity {
 
     //ファイル作り
     public void makefile() {
-        dataFile.getParentFile().mkdir();
+        if (checkAccel.isChecked())AccelDataFile.getParentFile().mkdir();
+        if (checkGyro.isChecked())GyroDataFile.getParentFile().mkdir();
+        if (checkOrient.isChecked())OrientDataFile.getParentFile().mkdir();
+        if (checkQuater.isChecked())QuaterDataFile.getParentFile().mkdir();
     }
 
     //内部ストレージが空いているかどうか
@@ -293,5 +387,30 @@ public class HelloWorldActivity extends Activity {
             return true;
         }
         return false;
+    }
+
+    //保存するデータの種類を選ぶチェックボックスの処理
+    public void  onCheckboxClicked(View view) {
+        switch(view.getId()) {
+            case R.id.checkAccel:
+                if (isAccel) isAccel = false;
+                else isAccel = true;
+                break;
+
+            case R.id.checkGyro:
+                if (isGyro) isGyro = false;
+                else isGyro = true;
+                break;
+
+            case R.id.checkQuaternion:
+                if (isQuater) isQuater = false;
+                else isQuater = true;
+                break;
+
+            case R.id.checkOrientation:
+                if (isOrient) isOrient = false;
+                else isOrient = true;
+                break;
+        }
     }
 }
