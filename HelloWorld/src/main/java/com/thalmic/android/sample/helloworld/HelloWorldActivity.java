@@ -37,6 +37,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.security.Timestamp;
 import java.util.Calendar;
 
 public class HelloWorldActivity extends Activity {
@@ -122,6 +123,7 @@ public class HelloWorldActivity extends Activity {
         // represented as a quaternion.
         @Override
         public void onOrientationData(Myo myo, long timestamp, Quaternion rotation) {
+            long time = System.currentTimeMillis();
             // Calculate Euler angles (roll, pitch, and yaw) from the quaternion.
             float roll = (float) Math.toDegrees(Quaternion.roll(rotation));
             float pitch = (float) Math.toDegrees(Quaternion.pitch(rotation));
@@ -135,7 +137,7 @@ public class HelloWorldActivity extends Activity {
 
             //Orientationデータの書き込み
             if (isRecord && isExternalStorageWritable() && isOrient) {
-                OrientData = timestamp + "," + roll + "," + pitch + "," + yaw + "\n";
+                OrientData = timestamp + "," + time + "," + roll + "," + pitch + "," + yaw + "\n";
                 try {
                     bwOrient.write(OrientData);
                     bwOrient.flush();
@@ -145,7 +147,7 @@ public class HelloWorldActivity extends Activity {
             }
             //四元ベクトルデータの書き込み
             if (isRecord && isExternalStorageWritable() && isQuater) {
-                QuaterData = timestamp + "," + rotation.x() + "," + rotation.y() + "," + rotation.z() + "," + rotation.w() + "\n";
+                QuaterData = timestamp + "," + time + "," + rotation.x() + "," + rotation.y() + "," + rotation.z() + "," + rotation.w() + "\n";
                 try {
                     bwQuater.write(QuaterData);
                     bwQuater.flush();
@@ -159,9 +161,11 @@ public class HelloWorldActivity extends Activity {
         //単位は g (1G = 9.80665 m/s^2)
         @Override
         public void onAccelerometerData(Myo myo, long timestamp, Vector3 accel) {
+            long time = System.currentTimeMillis();
+
             //加速度データの書き込み
             if (isRecord && isExternalStorageWritable() && isAccel) {
-                AccelData = timestamp + "," + accel.x() + "," + accel.y() + "," + accel.z() + "\n";
+                AccelData = timestamp + "," + time + "," + accel.x() + "," + accel.y() + "," + accel.z() + "\n";
                 try {
                     bwAccel.write(AccelData);
                     bwAccel.flush();
@@ -174,9 +178,11 @@ public class HelloWorldActivity extends Activity {
         // onGyroscopeData() is called when an attached Myo has provided new gyroscope data
         @Override
         public void onGyroscopeData(Myo myo, long timestamp, Vector3 gyro) {
+            long time = System.currentTimeMillis();
+
             //ジャイロデータの書き込み
             if (isRecord && isExternalStorageWritable() && isGyro) {
-                GyroData = timestamp + "," + gyro.x() + "," + gyro.y() + "," + gyro.z() + "\n";
+                GyroData = timestamp + "," + time + "," + gyro.x() + "," + gyro.y() + "," + gyro.z() + "\n";
                 try {
                     bwGyro.write(GyroData);
                     bwGyro.flush();
@@ -296,25 +302,25 @@ public class HelloWorldActivity extends Activity {
                             AccelFileOutputStream = new FileOutputStream(AccelDataFile, true);
                             AccelOutputStreamWriter = new OutputStreamWriter(AccelFileOutputStream, "UTF-8");
                             bwAccel = new BufferedWriter(AccelOutputStreamWriter);
-                            bwAccel.write("TimeStamp,x,y,z\n");
+                            bwAccel.write("Myo-TimeStamp,UNIX-TimeStamp,x,y,z\n");
                         }
                         if (checkGyro.isChecked()) {
                             GyroFileOutputStream = new FileOutputStream(GyroDataFile, true);
                             GyroOutputStreamWriter = new OutputStreamWriter(GyroFileOutputStream, "UTF-8");
                             bwGyro = new BufferedWriter(GyroOutputStreamWriter);
-                            bwGyro.write("TimeStamp,x,y,z\n");
+                            bwGyro.write("Myo-TimeStamp,UNIX-TimeStamp,x,y,z\n");
                         }
                         if (checkOrient.isChecked()) {
                             OrientFileOutputStream = new FileOutputStream(OrientDataFile, true);
                             OrientOutputStreamWriter = new OutputStreamWriter(OrientFileOutputStream, "UTF-8");
                             bwOrient = new BufferedWriter(OrientOutputStreamWriter);
-                            bwOrient.write("TimeStamp,roll,pitch,yaw\n");
+                            bwOrient.write("Myo-TimeStamp,UNIX-TimeStamp,roll,pitch,yaw\n");
                         }
                         if (checkQuater.isChecked()) {
                             QuaterFileOutputStream = new FileOutputStream(QuaterDataFile, true);
                             QuaterOutputStreamWriter = new OutputStreamWriter(QuaterFileOutputStream, "UTF-8");
                             bwQuater = new BufferedWriter(QuaterOutputStreamWriter);
-                            bwQuater.write("TimeStamp,x,y,z,w\n");
+                            bwQuater.write("Myo-TimeStamp,UNIX-TimeStamp,x,y,z,w\n");
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
