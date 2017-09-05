@@ -12,25 +12,47 @@
         android:orientation="vertical">
 
         <TextView
-            android:id="@+id/lock_state"
+            android:id="@+id/textView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
             android:layout_weight="1"
-            android:gravity="center"
-            android:text="@string/locked"
-            android:textSize="20dp"
-            tools:ignore="SpUsage" />
+            android:gravity="center_vertical|center_horizontal"
+            android:text="Connecting Myo"
+            android:textColor="@color/myosdk__button_orange" />
+
+        <CheckBox
+            android:id="@+id/myo1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:enabled="false"
+            android:text="Myo1 is not connected" />
+
+        <CheckBox
+            android:id="@+id/myo2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:enabled="false"
+            android:text="Myo2 is not connected" />
+
+        <CheckBox
+            android:id="@+id/myo3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:enabled="false"
+            android:text="Myo3 is not connected" />
 
         <TextView
-            android:id="@+id/text"
+            android:id="@+id/textView2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:gravity="center"
-            android:text="@string/hello_world"
-            android:textSize="50dp"
-            tools:ignore="SpUsage" />
+            android:gravity="center_vertical|center_horizontal"
+            android:text="Data variation "
+            android:textColor="@color/myosdk__button_orange"
+            android:textColorHighlight="@color/myosdk__button_red" />
 
         <CheckBox
             android:id="@+id/checkAccel"
