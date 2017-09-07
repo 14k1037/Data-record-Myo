@@ -45,7 +45,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 public class HelloWorldActivity extends Activity {
-    //Myo識別用変数
+    //Myoの個別識別用変数
     final int attachingCount = 3;
     int ConnectMyoCount = 0;
     private ArrayList<Myo> mKnownMyos = new ArrayList<Myo>();
@@ -86,6 +86,8 @@ public class HelloWorldActivity extends Activity {
 
             // Add the Myo object to our list of known Myo devices. This list is used to implement identifyMyo() below so
             // that we can give each Myo a nice short identifier.
+
+            //新しいMyoが接続されたらリストに追加する
             if (identifyMyo(myo) == 0) {
                 mKnownMyos.add(myo);
                 ConnectMyoCount++;
@@ -96,6 +98,7 @@ public class HelloWorldActivity extends Activity {
         @Override
         public void onConnect(Myo myo, long timestamp) {
             // Set the text color of the text view to cyan when a Myo connects.
+            //接続されたMyoをテキストの色を変えて表示する
             switch (identifyMyo(myo)) {
                 case 1:
                     Myo1.setTextColor(Color.CYAN);
@@ -121,6 +124,7 @@ public class HelloWorldActivity extends Activity {
         @Override
         public void onDisconnect(Myo myo, long timestamp) {
             // Set the text color of the text view to red when a Myo disconnects.
+            //接続が切れたMyoをテキストの色を変えて表示する
             switch (identifyMyo(myo)) {
                 case 1:
                     Myo1.setTextColor(Color.RED);
@@ -143,6 +147,7 @@ public class HelloWorldActivity extends Activity {
         // represented as a quaternion.
         @Override
         public void onOrientationData(Myo myo, long timestamp, Quaternion rotation) {
+            //メソッド呼び出し時のタイムスタンプを記録
             long time = System.currentTimeMillis();
             // Calculate Euler angles (roll, pitch, and yaw) from the quaternion.
             float roll = (float) Math.toDegrees(Quaternion.roll(rotation));
@@ -201,6 +206,7 @@ public class HelloWorldActivity extends Activity {
         //単位は g (1G = 9.80665 m/s^2)
         @Override
         public void onAccelerometerData(Myo myo, long timestamp, Vector3 accel) {
+            //メソッド呼び出し時のタイムスタンプを記録
             long time = System.currentTimeMillis();
 
             //加速度データの書き込み
@@ -228,6 +234,7 @@ public class HelloWorldActivity extends Activity {
         // onGyroscopeData() is called when an attached Myo has provided new gyroscope data
         @Override
         public void onGyroscopeData(Myo myo, long timestamp, Vector3 gyro) {
+            //メソッド呼び出し時のタイムスタンプを記録
             long time = System.currentTimeMillis();
             //ジャイロデータの書き込み
             if (isRecord && isExternalStorageWritable() && isGyro) {
@@ -260,6 +267,7 @@ public class HelloWorldActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_hello_world);
 
+        //画面上のオブジェクトと変数をつなげる
         Myo1 = (CheckBox) findViewById(R.id.myo1);
         Myo2 = (CheckBox) findViewById(R.id.myo2);
         Myo3 = (CheckBox) findViewById(R.id.myo3);
@@ -270,7 +278,7 @@ public class HelloWorldActivity extends Activity {
         checkQuater = (CheckBox) findViewById(R.id.checkQuaternion);
 
         record = (Button) findViewById(R.id.button);
-        //クリック時の処理
+        //レコードボタンのクリック時の処理
         record.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -287,6 +295,7 @@ public class HelloWorldActivity extends Activity {
                     checkOrient.setClickable(true);
                     checkQuater.setClickable(true);
 
+                    //ファイルを閉じる
                     try {
                         if (checkAccel.isChecked()) {
                             if (Myo1.isChecked())bwAccel.close();
@@ -324,8 +333,10 @@ public class HelloWorldActivity extends Activity {
                     checkOrient.setClickable(false);
                     checkQuater.setClickable(false);
 
+                    //ファイル作成
                     makefile();
                     try {
+                        //取得データの種類に応じてファイルに書き込む
                         if (checkAccel.isChecked()) {
                             if (Myo1.isChecked()) {
                                 AccelFileOutputStream = new FileOutputStream(AccelDataFile, true);
@@ -414,6 +425,7 @@ public class HelloWorldActivity extends Activity {
         });
 
         // First, we initialize the Hub singleton with an application identifier.
+        //Myo用Hubの設定
         Hub hub = Hub.getInstance();
         if (!hub.init(this, getPackageName())) {
             // We can't do anything with the Myo device if the Hub can't be initialized, so exit.
